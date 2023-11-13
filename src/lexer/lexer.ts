@@ -208,11 +208,3 @@ const input: string = `
     10 == 10;
     10 != 9;
 `;
-
-const lex: Lexer = new Lexer(input);
-let token = lex.nextToken();
-
-while(token.tokenType !== TokenType.EOF){
-    token = lex.nextToken();
-    console.log(token);
-}
