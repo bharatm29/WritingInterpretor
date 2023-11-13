@@ -11,8 +11,24 @@ export enum TokenType {
     RPAREN,
     LBRACE,
     RBRACE,
+    MINUS,
+    BANG,
+    ASTERISK,
+    SLASH,
+    LT,
+    GT,
+
+    //keywords
     FUNCTION,
-    LET
+    LET,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
+    RETURN,
+
+    NOTEQUAL,
+    EQUAL,
 }
 
 export type Token = {
