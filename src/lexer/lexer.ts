@@ -190,3 +190,29 @@ export class Lexer {
         return this.input[this.readPosition];
     }
 }
+
+const input: string = `
+    let five = 5;
+    let ten = 10;
+    let add = fn(x, y) {
+        x + y;
+    };
+    let result = add(five, ten);
+    !-/*5;
+    5 < 10 > 5;
+    if (5 < 10) {
+        return true;
+    } else {
+        return false;
+    }
+    10 == 10;
+    10 != 9;
+`;
+
+const lex: Lexer = new Lexer(input);
+let token = lex.nextToken();
+
+while(token.tokenType !== TokenType.EOF){
+    token = lex.nextToken();
+    console.log(token);
+}
