@@ -1,8 +1,8 @@
-import { Lexer } from "../lexer/lexer";
-import { Token, TokenType } from "../lexer/token";
+import { Token } from "../lexer/token";
 
 interface ASTNode {
     tokenLiteral(): string;
+    string(): string;
 }
 
 export interface Statement extends ASTNode {
@@ -10,11 +10,12 @@ export interface Statement extends ASTNode {
 }
 
 interface Expression extends ASTNode {
-     expressionNode(): void;
+    expressionNode(): void;
 }
 
 export class Program implements ASTNode {
     public statements: Statement[];
+
     constructor() {
         this.statements = [];
     }
@@ -26,6 +27,12 @@ export class Program implements ASTNode {
         else {
             return "";
         }
+    }
+
+    string(): string {
+        return this.statements.reduce((str, statement) => {
+            return str + statement.string() + "\n";
+        }, "");
     }
 }
 
@@ -42,6 +49,10 @@ export class Identifier implements Expression {
     tokenLiteral(): string {
         return this.token.literal;
     }
+
+    string(): string {
+        return this.value;
+    }
 }
 
 export class LetStatement implements Statement {
@@ -49,8 +60,7 @@ export class LetStatement implements Statement {
     constructor(
         public token: Token,
         public name: Identifier,
-    ){
-    }
+    ) { }
 
     statementNode(): void {
         throw new Error("Method not implemented.");
@@ -59,99 +69,69 @@ export class LetStatement implements Statement {
     tokenLiteral(): string {
         return this.token.literal;
     }
+
+    string(): string {
+        let str = "";
+
+        str += this.tokenLiteral() + " ";
+        str += this.name.string();
+        str += " = ";
+
+        if(this.value){
+            str += this.value.string();
+        }
+
+        str += ";";
+
+        return str;
+    }
+
 }
 
-export class Parser {
-    public lex: Lexer;
+export class ReturnStatement implements Statement {
+    public returnValue?: Expression;
 
-    public curToken: Token;
-    public peekToken: Token;
+    constructor(
+        public token: Token
+    ) { }
 
-    public errors: string[];
-
-    constructor(lex: Lexer){
-        this.lex = lex;
- 
-        this.curToken = this.peekToken = { tokenType: TokenType.ILLEGAL, literal: "" };
-
-        this.errors = [];
+    statementNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
     }
 
-    peekError(tokenType: TokenType){
-        const message =`Expected next token to be ${tokenType}, but got ${this.peekToken.tokenType} instead`;
-        this.errors.push(message);
-    }
+    string(): string {
+        let str = "";
 
-    nextToken(): void {
-        this.curToken = this.peekToken;
+        str += this.tokenLiteral() + " ";
 
-        this.peekToken = this.lex.nextToken();
-    }
-
-    parseProgram(): Program {
-        const program = new Program();
-
-        while(!this.curTokenIs(TokenType.EOF)){
-            const statement = this.parseStatement();
-
-            if(statement !== null){
-                program.statements.push(statement);
-            }
-
-            this.nextToken();
+        if(this.returnValue){
+            str += this.returnValue.string();
         }
 
-        return program;
+        str += ";";
+
+        return str;
+    }
+}
+
+export class ExpressionStatement implements Statement {
+    public expression?: Expression;
+
+    constructor(
+        public token: Token
+    ) { }
+
+    statementNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
     }
 
-    private parseStatement(): Statement | null {
-        switch (this.curToken.tokenType) {
-            case TokenType.LET:
-                return this.parseLetStatement();
-
-            default:
-                return null;
-        }
-    }
-
-    private parseLetStatement(): LetStatement | null {
-        const statement = new LetStatement(
-                this.curToken,
-                new Identifier("lolzz", this.curToken)
-            );
-
-        if(!this.expectPeek(TokenType.IDENT)){
-            return null;
-        }
-
-        statement.name = new Identifier(this.curToken.literal, this.curToken);
-
-        if(!this.expectPeek(TokenType.ASSIGN)){
-            return null;
-        }
-
-        while(!this.curTokenIs(TokenType.SEMICOLON)){
-            this.nextToken();
-        }
-
-        return statement;
-    }
-
-    private expectPeek(tokenType: TokenType): boolean {
-        if(this.peekTokenIs(tokenType)){
-            this.nextToken();
-            return true;
-        }
-
-        this.peekError(tokenType);
-        return false;
-    }
-
-    private curTokenIs(tokenType: TokenType): boolean {
-        return this.curToken.tokenType === tokenType;
-    }
-
-    private peekTokenIs(tokenType: TokenType): boolean {
-        return this.peekToken.tokenType === tokenType;
+    string(): string {
+        return this.expression ? this.expression.string() : "";
     }
 }

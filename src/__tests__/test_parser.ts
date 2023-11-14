@@ -1,4 +1,5 @@
-import { LetStatement, Parser, Program, Statement } from "../ast/ast";
+import { LetStatement, Program, ReturnStatement, Statement } from "../ast/ast";
+import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
 test("Testing parsing let statements", () => {
@@ -49,3 +50,39 @@ function checkParseErrors(p: Parser){
  
     throw new Error("Parser had errors. The test has been stopped from execution");
 }
+
+test("Testing parser's return statements", () => {
+    const input = `
+        return 5;
+        return 10;
+        return 993322;
+    `;
+
+    const lex = new Lexer(input);
+
+    const parser = new Parser(lex);
+
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program).not.toBeNull();
+    expect(program?.statements.length).toEqual(3);
+
+    program.statements.forEach(p => {
+        expect(p).toBeInstanceOf(ReturnStatement);
+
+        const returnStatement = p as ReturnStatement;
+        expect(returnStatement.tokenLiteral()).toEqual("return");
+    });
+});
+
+test("Testing string conversion", () => {
+    const input = `let x = 5;`;
+
+    const parser = new Parser(new Lexer(input));
+
+    const program = parser.parseProgram();
+
+    // console.log(program.string());
+    expect(program.string()).toContain("let x = ;");
+});
