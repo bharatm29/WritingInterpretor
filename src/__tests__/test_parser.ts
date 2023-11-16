@@ -1,4 +1,4 @@
-import { BooleanExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
+import { BooleanExpression, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
 import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
@@ -428,6 +428,64 @@ test("Testing parsing function literal", () => {
     const bodyStmt = funcLiteral.body?.statements[0] as ExpressionStatement;
 
     testInfixExpressions(bodyStmt.expression as Expression, "x", "+", "y");
+});
+
+test("Testing parsing function parameters", () => {
+    type ParameterTest = {
+        input: string,
+        expectedParams: string[],
+    };
+
+    const tests = [
+        { input: "fn() {};", expectedParams: []},
+        { input: "fn(x) {};", expectedParams: ["x"] },
+        { input: "fn(x, y, z) {};", expectedParams: ["x", "y", "z"] },
+    ];
+
+    tests.forEach(t => {
+        const lex = new Lexer(t.input);
+        const parser = new Parser(lex);
+
+        const program = parser.parseProgram();
+        checkParseErrors(parser);
+
+        const stmt = program.statements[0] as ExpressionStatement;
+        const funLiteral = stmt.expression as FunctionLiteral;
+
+        expect(funLiteral.parameters?.length).toEqual(t.expectedParams.length);
+
+        for(let i = 0; i < t.expectedParams.length; i++){
+            testLiteralExpressions(funLiteral.parameters?.at(i) as Expression, t.expectedParams[i]);
+        }
+    });
+});
+
+test("Testing parsing call expressions", () => {
+    const input = "add(1, 2 * 3, 4 + 5);";
+
+    const lex = new Lexer(input);
+    const parser = new Parser(lex);
+
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.statements.length).toBe(1);
+
+    expect(program.statements[0]).toBeInstanceOf(ExpressionStatement);
+
+    const stmt = program.statements[0] as ExpressionStatement;
+
+    expect(stmt.expression).toBeInstanceOf(CallExpression);
+
+    const exp = stmt.expression as CallExpression;
+
+    testIdentifier(exp.func as Expression, "add");
+
+    expect(exp.arguments.length).toBe(3);
+
+    testLiteralExpressions(exp.arguments[0], 1);
+    testInfixExpressions(exp.arguments[1], 2, "*", 3);
+    testInfixExpressions(exp.arguments[2], 4, "+", 5);
 });
 
 function testLiteralExpressions(exp: Expression, expected: any){

@@ -1,6 +1,6 @@
 import { Lexer } from "../lexer/lexer";
 import { Token, TokenType } from "../lexer/token";
-import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression, IfExpression, BlockStatement, FunctionLiteral } from "./ast";
+import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression, IfExpression, BlockStatement, FunctionLiteral, CallExpression } from "./ast";
 
 export class Parser {
     public lex: Lexer;
@@ -42,6 +42,7 @@ export class Parser {
         this.registerInfix(TokenType.ASTERISK, this.parseInfixExpression);
         this.registerInfix(TokenType.LT, this.parseInfixExpression);
         this.registerInfix(TokenType.GT, this.parseInfixExpression);
+        this.registerInfix(TokenType.LPAREN, this.parseCallExpression); //this acts as infix for the call function
 
         this.precedences = this.initPrecedences();
     }
@@ -273,6 +274,43 @@ export class Parser {
         return identtifiers;
     }
 
+    private parseCallExpression(funcExp: Expression): Expression {
+        const exp = new CallExpression(this.curToken);
+        exp.func = funcExp;
+
+        const args = this.parseCallArguments();
+
+        if(args){
+            exp.arguments = args;
+        }
+
+        return exp;
+    }
+
+    private parseCallArguments(): Expression[] | null {
+        const args: Expression[] = [];
+
+        if(this.peekTokenIs(TokenType.RPAREN)){
+            this.nextToken();
+            return args;
+        }
+
+        this.nextToken();
+        args.push(this.parseExpression(Precedence.LOWEST) as Expression);
+
+        while(this.peekTokenIs(TokenType.COMMA)){
+            this.nextToken();
+            this.nextToken();
+            args.push(this.parseExpression(Precedence.LOWEST) as Expression);
+        }
+
+        if(!this.expectPeek(TokenType.RPAREN)){
+            return null
+        }
+
+        return args; 
+    }
+
     private parseLetStatement(): LetStatement | null {
         const statement = new LetStatement(
             this.curToken,
@@ -354,6 +392,7 @@ export class Parser {
             [TokenType.MINUS, Precedence.SUM],
             [TokenType.SLASH, Precedence.PRODUCT],
             [TokenType.ASTERISK, Precedence.PRODUCT],
+            [TokenType.LPAREN, Precedence.CALL],
         ]);
     }
 

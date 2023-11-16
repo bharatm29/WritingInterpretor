@@ -268,7 +268,6 @@ export class BlockStatement implements Statement {
     }
 }
 
-
 export class FunctionLiteral implements Expression {
     public parameters: Identifier[] | undefined;
     public body?: BlockStatement;
@@ -296,5 +295,28 @@ export class FunctionLiteral implements Expression {
         str += `)${this.body?.string()}`;
 
         return str;
+    }
+}
+
+export class CallExpression implements Expression {
+    public func?: Expression
+    public arguments: Expression[];
+
+    constructor(public token: Token){
+        this.arguments = [];
+    }
+
+    expressionNode(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let args = this.arguments.reduce((acc, arg) => acc + arg.string() + ",", "");
+
+        return `${this.func?.string()}(${args})}`;
     }
 }
