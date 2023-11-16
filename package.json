@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "repl": "npx ts-node ./src/repl.ts"
+    "repl": "npx ts-node ./src/repl.ts",
+    "parse": "npx ts-node ./src/parser_run.ts"
   },
   "keywords": [],
   "author": "",

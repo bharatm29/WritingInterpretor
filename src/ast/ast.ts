@@ -292,7 +292,7 @@ export class FunctionLiteral implements Expression {
             str += p.string() + ", ";
         });
 
-        str += `)${this.body?.string()}`;
+        str += `){${this.body?.string()}}`;
 
         return str;
     }
@@ -317,6 +317,6 @@ export class CallExpression implements Expression {
     string(): string {
         let args = this.arguments.reduce((acc, arg) => acc + arg.string() + ",", "");
 
-        return `${this.func?.string()}(${args})}`;
+        return `${this.func?.string()}(${args})`;
     }
 }
