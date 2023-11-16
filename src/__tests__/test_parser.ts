@@ -165,18 +165,7 @@ test("Testing parsing prefix Expressions", () => {
     });
 });
 
-function testIntegerLiteral(exp: Expression | undefined, value: number) {
-    expect(exp).toBeDefined();
-
-    expect(exp).toBeInstanceOf(IntegerLiteral);
-
-    const literal = exp as IntegerLiteral;
-
-    expect(literal.value).toBe(value);
-    expect(literal.tokenLiteral()).toBe(value.toString());
-}
-
-test("Testing parsing prefix Expressions", () => {
+test("Testing parsing infix Expressions", () => {
     type InfixTest = {
         input: string,
         leftValue: number,
@@ -207,16 +196,7 @@ test("Testing parsing prefix Expressions", () => {
         expect(program.statements[0]).toBeInstanceOf(ExpressionStatement);
 
         const stmt = program.statements[0] as ExpressionStatement;
-
-        expect(stmt.expression).toBeInstanceOf(InfixExpression);
-
-        const exp = stmt.expression as InfixExpression;
-
-        testIntegerLiteral(exp.left, it.leftValue);
-
-        expect(exp.operator).toBe(it.operator);
-
-        testIntegerLiteral(exp.right, it.rightValue);
+        testInfixExpressions(stmt.expression as Expression, it.leftValue, it.operator, it.rightValue);
     });
 });
 
@@ -293,3 +273,46 @@ test("Testing parsing operator precedence", () => {
         expect(actual.slice(0, actual.length - 1)).toEqual(t.expected); //slice to remove the trailing space.
     });
 });
+
+function testLiteralExpressions(exp: Expression, expected: any){
+    switch(typeof expected){
+        case "string":
+            return testIdentifier(exp, expected);
+        case "number":
+            return testIntegerLiteral(exp, expected);
+        default:
+            throw new Error("type of expression not handled: " + exp); //lol
+    }
+}
+
+function testIdentifier(exp: Expression, value: string) {
+    expect(exp).toBeInstanceOf(Identifier);
+
+    const ident = exp as Identifier;
+
+    expect(ident.value).toBe(value);
+    expect(ident.tokenLiteral()).toBe(value);
+}
+
+function testIntegerLiteral(exp: Expression | undefined, value: number) {
+    expect(exp).toBeDefined();
+
+    expect(exp).toBeInstanceOf(IntegerLiteral);
+
+    const literal = exp as IntegerLiteral;
+
+    expect(literal.value).toBe(value);
+    expect(literal.tokenLiteral()).toBe(value.toString());
+}
+
+function testInfixExpressions(exp: Expression, left: any, operator: string, right: any){
+    expect(exp).toBeInstanceOf(InfixExpression);
+
+    const opExp = exp as InfixExpression;
+
+    testLiteralExpressions(opExp.left as Expression, left);
+
+    expect(opExp.operator).toBe(operator);
+
+    testLiteralExpressions(opExp.right as Expression, right);
+}
