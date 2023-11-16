@@ -117,6 +117,17 @@ export class ReturnStatement implements Statement {
     }
 }
 
+export enum Precedence {
+    _,
+    LOWEST,
+    EQUALS,
+    LESSGREATER,
+    SUM,
+    PRODUCT,
+    PREFIX,
+    CALL,
+}
+
 export class ExpressionStatement implements Statement {
     public expression?: Expression;
 
@@ -136,13 +147,61 @@ export class ExpressionStatement implements Statement {
     }
 }
 
-export enum Precedence {
-    _,
-    LOWEST,
-    EQUALS,
-    LESSGREATER,
-    SUM,
-    PRODUCT,
-    PREFIX,
-    CALL,
+export class IntegerLiteral implements Expression {
+    public value?: number;
+
+    constructor(
+        public token: Token
+    ) { }
+
+    expressionNode(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        return this.token.literal;
+    }
+}
+
+export class PrefixExpression implements Expression {
+    public right?: Expression;
+
+    constructor(
+        public token: Token,
+        public operator: string,
+    ) { }
+
+    expressionNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+    string(): string {
+        return `( ${this.operator} ${this.right?.string()})`;
+    }
+}
+
+export class InfixExpression implements Expression {
+    public right?: Expression;
+    public left?: Expression;
+
+    constructor(
+        public token: Token,
+        public operator: string,
+    ) { }
+
+    expressionNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+    string(): string {
+        return `( ${this.left?.string()} ${this.operator} ${this.right?.string})`;
+    }
 }
