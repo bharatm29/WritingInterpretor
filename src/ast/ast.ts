@@ -222,3 +222,48 @@ export class BooleanExpression implements Expression{
         return this.token.literal;
     }
 }
+
+export class IfExpression implements Expression {
+    public condition?: Expression;
+    public consequence?: BlockStatement;
+    public alternative?: BlockStatement;
+
+    constructor(
+        public token: Token,
+    ) {}
+
+    expressionNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+    string(): string {
+        let str = `if (${this.condition?.string()}) ${this.consequence?.string()}`;
+
+        if(this.alternative){
+            str += ` else ${this.alternative.string()}`;
+        }
+        return str;
+    }
+}
+
+export class BlockStatement implements Statement {
+    public statements: Statement[];
+
+    constructor(public token: Token){
+        this.statements = [];
+    }
+
+    statementNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+    string(): string {
+        return this.statements.reduce((str, statement) => {
+            return str + statement.string() + " ";
+        }, "");
+    }
+}

@@ -1,6 +1,6 @@
 import { Lexer } from "../lexer/lexer";
 import { Token, TokenType } from "../lexer/token";
-import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression } from "./ast";
+import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression, IfExpression, BlockStatement } from "./ast";
 
 export class Parser {
     public lex: Lexer;
@@ -30,6 +30,7 @@ export class Parser {
         this.registerPrefix(TokenType.TRUE, this.parseBoolean);
         this.registerPrefix(TokenType.FALSE, this.parseBoolean);
         this.registerPrefix(TokenType.LPAREN, this.parseGroupedExpressions);
+        this.registerPrefix(TokenType.IF, this.parseIfExpression);
 
         this.infixParseFns = new Map();
         this.registerInfix(TokenType.EQUAL, this.parseInfixExpression);
@@ -175,6 +176,56 @@ export class Parser {
         }
 
         return exp;
+    }
+
+    private parseIfExpression(): Expression | null {
+        const exp = new IfExpression(this.curToken);
+
+        if(!this.expectPeek(TokenType.LPAREN)){
+            return null;
+        }
+
+        this.nextToken();
+        exp.condition = this.parseExpression(Precedence.LOWEST);
+
+        if(!this.expectPeek(TokenType.RPAREN)){
+            return null;
+        }
+
+        if(!this.expectPeek(TokenType.LBRACE)){
+            return null;
+        }
+
+        exp.consequence = this.parseBlockStatements();
+
+        if(this.peekTokenIs(TokenType.ELSE)){
+            this.nextToken();
+
+            if(!this.expectPeek(TokenType.LBRACE)){
+                return null;
+            }
+
+            exp.alternative = this.parseBlockStatements();
+        }
+
+        return exp;
+    }
+
+    private parseBlockStatements(): BlockStatement | undefined {
+        const block = new BlockStatement(this.curToken);
+        block.statements = [];
+
+        this.nextToken();
+
+        while(!this.curTokenIs(TokenType.RBRACE) && !this.curTokenIs(TokenType.EOF)){
+            const stmt = this.parseStatement();
+            if(stmt){
+                block.statements.push(stmt);
+            }
+            this.nextToken();
+        }
+
+        return block;
     }
 
     private parseLetStatement(): LetStatement | null {
