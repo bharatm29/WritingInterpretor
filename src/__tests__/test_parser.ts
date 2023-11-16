@@ -1,4 +1,4 @@
-import { BooleanExpression, Expression, ExpressionStatement, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
+import { BooleanExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
 import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
@@ -396,6 +396,38 @@ test("Testing parsing If-Else expressions", () => {
     const alternativeExp = ifElseExp.alternative?.statements[0] as ExpressionStatement;
 
     testIdentifier(alternativeExp.expression as Expression, "y");
+});
+
+test("Testing parsing function literal", () => {
+    const input = `fn(x, y) { x + y; }`;
+
+    const lex = new Lexer(input);
+    const parser = new Parser(lex);
+
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.statements.length).toBe(1);
+    expect(program.statements[0]).toBeInstanceOf(ExpressionStatement);
+
+    const stmt = program.statements[0] as ExpressionStatement;
+
+    expect(stmt.expression).toBeInstanceOf(FunctionLiteral);
+
+    const funcLiteral = stmt.expression as FunctionLiteral;
+ 
+    expect(funcLiteral.parameters?.length).toBe(2);
+
+    testLiteralExpressions(funcLiteral.parameters?.at(0) as Identifier, "x");
+    testLiteralExpressions(funcLiteral.parameters?.at(1) as Identifier, "y");
+
+    expect(funcLiteral.body?.statements.length).toBe(1);
+
+    expect(funcLiteral.body?.statements[0]).toBeInstanceOf(ExpressionStatement);
+
+    const bodyStmt = funcLiteral.body?.statements[0] as ExpressionStatement;
+
+    testInfixExpressions(bodyStmt.expression as Expression, "x", "+", "y");
 });
 
 function testLiteralExpressions(exp: Expression, expected: any){

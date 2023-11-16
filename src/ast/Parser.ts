@@ -1,6 +1,6 @@
 import { Lexer } from "../lexer/lexer";
 import { Token, TokenType } from "../lexer/token";
-import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression, IfExpression, BlockStatement } from "./ast";
+import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression, IfExpression, BlockStatement, FunctionLiteral } from "./ast";
 
 export class Parser {
     public lex: Lexer;
@@ -31,6 +31,7 @@ export class Parser {
         this.registerPrefix(TokenType.FALSE, this.parseBoolean);
         this.registerPrefix(TokenType.LPAREN, this.parseGroupedExpressions);
         this.registerPrefix(TokenType.IF, this.parseIfExpression);
+        this.registerPrefix(TokenType.FUNCTION, this.parseFunctionLiteral);
 
         this.infixParseFns = new Map();
         this.registerInfix(TokenType.EQUAL, this.parseInfixExpression);
@@ -226,6 +227,50 @@ export class Parser {
         }
 
         return block;
+    }
+
+    private parseFunctionLiteral(): Expression | null {
+        const lit = new FunctionLiteral(this.curToken);
+
+        if(!this.expectPeek(TokenType.LPAREN)){
+            return null;
+        }
+
+        lit.parameters = this.parseFunctionParams();
+
+        if(!this.expectPeek(TokenType.LBRACE)){
+            return null;
+        }
+
+        lit.body = this.parseBlockStatements();
+
+        return lit;
+    }
+
+    private parseFunctionParams(): Identifier[] | undefined {
+        const identtifiers: Identifier[] = [];
+
+        if(this.peekTokenIs(TokenType.RPAREN)){
+            this.nextToken();
+            return identtifiers;
+        }
+
+        this.nextToken();
+
+        identtifiers.push(new Identifier(this.curToken.literal, this.curToken));
+
+        while(this.peekTokenIs(TokenType.COMMA)){
+            this.nextToken();
+            this.nextToken();
+
+            identtifiers.push(new Identifier(this.curToken.literal, this.curToken));
+        }
+
+        if(!this.expectPeek(TokenType.RPAREN)){
+            return undefined;
+        }
+
+        return identtifiers;
     }
 
     private parseLetStatement(): LetStatement | null {
