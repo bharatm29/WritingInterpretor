@@ -205,3 +205,20 @@ export class InfixExpression implements Expression {
         return `(${this.left?.string()} ${this.operator} ${this.right?.string()})`;
     }
 }
+
+export class BooleanExpression implements Expression{
+    constructor(
+        public token: Token,
+        public value: boolean
+    ){ }
+
+    expressionNode(): void {
+        throw new Error("Method not implemented.");
+    }
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+    string(): string {
+        return this.token.literal;
+    }
+}

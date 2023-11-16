@@ -1,6 +1,6 @@
 import { Lexer } from "../lexer/lexer";
 import { Token, TokenType } from "../lexer/token";
-import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression } from "./ast";
+import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression } from "./ast";
 
 export class Parser {
     public lex: Lexer;
@@ -27,6 +27,8 @@ export class Parser {
         this.registerPrefix(TokenType.INT, this.parseIntegerLiteral);
         this.registerPrefix(TokenType.BANG, this.parsePrefixExpression);
         this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression);
+        this.registerPrefix(TokenType.TRUE, this.parseBoolean);
+        this.registerPrefix(TokenType.FALSE, this.parseBoolean);
 
         this.infixParseFns = new Map();
         this.registerInfix(TokenType.EQUAL, this.parseInfixExpression);
@@ -40,11 +42,6 @@ export class Parser {
 
         this.precedences = this.initPrecedences();
     }
-    peekError(tokenType: TokenType) {
-        const message = `Expected next token to be ${tokenType}, but got ${this.peekToken.tokenType} instead`;
-        this.errors.push(message);
-    }
-
 
     nextToken(): void {
         this.curToken = this.peekToken;
@@ -94,6 +91,7 @@ export class Parser {
     }
     private parseExpression(precedence: Precedence): Expression | undefined {
         if(!this.prefixParseFns.has(this.curToken.tokenType)){
+            this.noPrefixParseFnError(this.curToken.tokenType);
             return undefined;
         }
 
@@ -161,6 +159,10 @@ export class Parser {
         return exp;
     }
 
+    private parseBoolean(): Expression | null {
+        return new BooleanExpression(this.curToken, this.curTokenIs(TokenType.TRUE));
+    }
+
     private parseLetStatement(): LetStatement | null {
         const statement = new LetStatement(
             this.curToken,
@@ -204,6 +206,11 @@ export class Parser {
 
         this.peekError(tokenType);
         return false;
+    }
+
+    peekError(tokenType: TokenType) {
+        const message = `Expected next token to be ${tokenType}, but got ${this.peekToken.tokenType} instead`;
+        this.errors.push(message);
     }
 
     private curTokenIs(tokenType: TokenType): boolean {
