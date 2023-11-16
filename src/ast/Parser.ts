@@ -86,7 +86,7 @@ export class Parser {
 
         statement.expression = this.parseExpression(Precedence.LOWEST);
 
-        if(this.peekTokenIs(TokenType.SEMICOLON)){
+        if(this.peekTokenIs(TokenType.SEMICOLON)){ //skip the optional semi-colon.
             this.nextToken();
         }
 
