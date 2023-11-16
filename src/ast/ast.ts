@@ -1,6 +1,6 @@
 import { Token } from "../lexer/token";
 
-interface ASTNode {
+export interface ASTNode {
     tokenLiteral(): string;
     string(): string;
 }
@@ -9,7 +9,7 @@ export interface Statement extends ASTNode {
     statementNode(): void;
 }
 
-interface Expression extends ASTNode {
+export interface Expression extends ASTNode {
     expressionNode(): void;
 }
 
@@ -134,4 +134,15 @@ export class ExpressionStatement implements Statement {
     string(): string {
         return this.expression ? this.expression.string() : "";
     }
+}
+
+export enum Precedence {
+    _,
+    LOWEST,
+    EQUALS,
+    LESSGREATER,
+    SUM,
+    PRODUCT,
+    PREFIX,
+    CALL,
 }

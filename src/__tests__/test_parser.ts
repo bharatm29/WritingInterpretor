@@ -1,4 +1,4 @@
-import { LetStatement, Program, ReturnStatement, Statement } from "../ast/ast";
+import { ExpressionStatement, Identifier, LetStatement, Program, ReturnStatement, Statement } from "../ast/ast";
 import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
@@ -85,4 +85,26 @@ test("Testing string conversion", () => {
 
     // console.log(program.string());
     expect(program.string()).toContain("let x = ;");
+});
+
+test("Testing parsing identifier expressions", () => {
+    const input = "foobar;";
+
+    const lex: Lexer = new Lexer(input);
+    const parser = new Parser(lex);
+
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.statements.length).toBe(1);
+    expect(program.statements[0]).toBeInstanceOf(ExpressionStatement);
+
+    const stmt = program.statements[0] as ExpressionStatement;
+
+    expect(stmt.expression).toBeInstanceOf(Identifier);
+
+    const identifier = stmt.expression as Identifier;
+
+    expect(identifier.value).toBe("foobar");
+    expect(identifier.tokenLiteral()).toBe("foobar");
 });
