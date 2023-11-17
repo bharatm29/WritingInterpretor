@@ -7,7 +7,7 @@ npm i
 
 Then for running the REPL:
 ```shell
-npm run repl
+npm run lex
 ```
 
 Then for running the parser:

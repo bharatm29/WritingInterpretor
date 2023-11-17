@@ -1,12 +1,12 @@
-import { BooleanExpression, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
+import { BooleanExpression, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement, Statement } from "../ast/ast";
 import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
-test("Testing parsing let statements", () => {
+test("Testing parsing let statements without expression parsing", () => {
     const input = `
         let x = 5;
-        let y = 10;
-        let foobar = 838383;
+        let y = 12;
+        let foobar = 12;
     `;
 
     const parser = new Parser(new Lexer(input));
@@ -25,33 +25,7 @@ test("Testing parsing let statements", () => {
     }
 });
 
-function testLetStatement(astStatement: Statement, name: string) {
-    expect(astStatement.tokenLiteral()).toEqual("let");
-
-    expect(astStatement).toBeInstanceOf(LetStatement);
-
-    const letStatement = astStatement as LetStatement;
-
-    expect(letStatement.name.value).toEqual(name);
-
-    expect(letStatement.name.tokenLiteral()).toEqual(name);
-}
-
-function checkParseErrors(p: Parser) {
-    const errors = p.errors;
-
-    if (errors.length === 0) {
-        return;
-    }
-
-    console.warn(`Parse has ${errors.length} errors!`);
-
-    errors.forEach(console.log);
-
-    throw new Error("Parser had errors. The test has been stopped from execution");
-}
-
-test("Testing parser's return statements", () => {
+test("Testing parser's return statements without expression parsing", () => {
     const input = `
         return 5;
         return 10;
@@ -84,7 +58,7 @@ test("Testing string conversion", () => {
     const program = parser.parseProgram();
 
     // console.log(program.string());
-    expect(program.string()).toContain("let x = ;");
+    expect(program.string()).toContain("let x = 5;");
 });
 
 test("Testing parsing identifier expressions", () => {
@@ -488,6 +462,64 @@ test("Testing parsing call expressions", () => {
     testInfixExpressions(exp.arguments[2], 4, "+", 5);
 });
 
+test("Testing parsing let statements with expression parsing", () => {
+    type LetTest = {
+        input: string
+        expectedIdent: string
+        expectedValue: any;
+    };
+
+    const tests: LetTest[] = [
+        { input: "let x = 5;", expectedIdent: "x", expectedValue: 5, },
+        { input: "let y = true;", expectedIdent: "y", expectedValue: true, },
+        { input: "let foobar = y;", expectedIdent: "foobar", expectedValue: "y", }
+    ];
+ 
+    tests.forEach(t => {
+        const parser = new Parser(new Lexer(t.input));
+
+        const program = parser.parseProgram();
+        checkParseErrors(parser);
+
+        expect(program).not.toBeNull();
+        expect(program?.statements.length).toEqual(1);
+
+        const stmt = program.statements[0];
+
+        testLetStatement(stmt, t.expectedIdent);
+        testLiteralExpressions((stmt as LetStatement).value as Expression, t.expectedValue);
+    });
+});
+
+test("Testing parsing return statements with expression parsing", () => {
+    type LetTest = {
+        input: string
+        expectedValue: any;
+    };
+
+    const tests: LetTest[] = [
+        { input: "return 5;", expectedValue: 5, },
+        { input: "return true;", expectedValue: true, },
+        { input: "return y;", expectedValue: "y", }
+    ];
+ 
+    tests.forEach(t => {
+        const parser = new Parser(new Lexer(t.input));
+
+        const program = parser.parseProgram();
+        checkParseErrors(parser);
+
+        expect(program).not.toBeNull();
+        expect(program?.statements.length).toEqual(1);
+
+        expect(program.statements[0]).toBeInstanceOf(ReturnStatement);
+
+        const stmt = program.statements[0] as ReturnStatement;
+
+        testLiteralExpressions(stmt.returnValue as Expression, t.expectedValue);
+    });
+});
+
 function testLiteralExpressions(exp: Expression, expected: any){
     expect(exp).toBeDefined();
     expect(exp).not.toBeNull();
@@ -544,3 +576,30 @@ function testBooleanExpressions(exp: Expression, value: boolean) {
     expect(boolExp.value).toBe(value);
     expect(boolExp.tokenLiteral()).toBe(value ? "true" : "false");
 }
+
+function testLetStatement(astStatement: Statement, name: string) {
+    expect(astStatement.tokenLiteral()).toEqual("let");
+
+    expect(astStatement).toBeInstanceOf(LetStatement);
+
+    const letStatement = astStatement as LetStatement;
+
+    expect(letStatement.name.value).toEqual(name);
+
+    expect(letStatement.name.tokenLiteral()).toEqual(name);
+}
+
+function checkParseErrors(p: Parser) {
+    const errors = p.errors;
+
+    if (errors.length === 0) {
+        return;
+    }
+
+    console.warn(`Parse has ${errors.length} errors!`);
+
+    errors.forEach(console.log);
+
+    throw new Error("Parser had errors. The test has been stopped from execution");
+}
+

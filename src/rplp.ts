@@ -14,6 +14,12 @@ rs.on("line", (input) => {
     const parser = new Parser(lex);
     const program = parser.parseProgram();
 
+    if(parser.errors.length !== 0){
+        parser.errors.forEach(e => {
+            console.log(e);
+        });
+    }
+
     console.log(program.string());
 
     console.log(PROMPT);
