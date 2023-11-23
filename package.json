@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "lex": "npx ts-node ./src/rlpl.ts",
-    "parse": "npx ts-node ./src/rplp.ts"
+    "parse": "npx ts-node ./src/rplp.ts",
+    "repl": "npx ts-node ./src/repl.ts"
   },
   "keywords": [],
   "author": "",
