@@ -20,6 +20,9 @@ export class Parser {
 
         this.curToken = this.peekToken = { tokenType: TokenType.NULL, literal: "" };
 
+        this.nextToken();
+        this.nextToken();
+
         this.errors = [];
 
         this.prefixParseFns = new Map();

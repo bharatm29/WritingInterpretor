@@ -1,5 +1,4 @@
 export enum TokenType {
-    NULL = "Null",
     ILLEGAL = "Illegal",
     EOF = "Eof",
     IDENT = "Ident",

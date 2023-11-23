@@ -317,6 +317,6 @@ export class CallExpression implements Expression {
     string(): string {
         let args = this.arguments.reduce((acc, arg) => acc + arg.string() + ",", "");
 
-        return `${this.func?.string()}(${args})`;
+        return `${this.func?.string()}(${args.slice(0, args.length - 1)})`;
     }
 }

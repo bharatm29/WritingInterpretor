@@ -18,7 +18,7 @@ export class Lexer {
     }
     nextToken(): Token {
         let token: Token = {
-                    tokenType: TokenType.ILLEGAL,
+                    tokenType: TokenType.NULL,
                     literal: ""
                 };
 
