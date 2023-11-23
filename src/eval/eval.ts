@@ -1,7 +1,7 @@
-import { ASTNode, BooleanExpression, Expression, ExpressionStatement, InfixExpression, IntegerLiteral, PrefixExpression, Program, Statement } from "../ast/ast";
+import { ASTNode, BlockStatement, BooleanExpression, Expression, ExpressionStatement, IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, Program, Statement } from "../ast/ast";
 import * as Obj from "./interpretObject";
 
-class GlobalConstants {
+export class GlobalConstants {
     public static BOOL_TRUE: Obj.Boolean = new Obj.Boolean(true);
     public static BOOL_FALSE: Obj.Boolean = new Obj.Boolean(false);;
     public static NULL: Obj.Null = new Obj.Null();
@@ -34,6 +34,13 @@ export function evalAST(node: ASTNode): Obj.InterpretObject {
             const right = evalAST(infixNode.right as Expression);
 
             return evalInfixExpression(infixNode.operator, left, right);
+
+        //evaluating if expressions
+        case "BlockStatement":
+            return evalStatements((node as BlockStatement).statements);
+ 
+        case "IfExpression":
+            return evalIfExpression((node as IfExpression));
 
         default:
             return GlobalConstants.NULL;
@@ -134,4 +141,19 @@ function evalIntegerInfixExpression(operator: string, left: Obj.InterpretObject,
 
 function nativeBoolToBooleanObject(b: boolean): Obj.InterpretObject {
     return b ? GlobalConstants.BOOL_TRUE : GlobalConstants.BOOL_FALSE;
+}
+
+function evalIfExpression(ienode: IfExpression): Obj.InterpretObject {
+    const condition = evalAST(ienode.condition as Expression);
+
+    if(isTruthy(condition)){
+        return evalAST(ienode.consequence as BlockStatement);
+    }
+    else{
+        return ienode.alternative ? evalAST(ienode.alternative as BlockStatement) : GlobalConstants.NULL;
+    }
+}
+
+function isTruthy(condition: Obj.InterpretObject): boolean {
+    return condition === GlobalConstants.NULL || condition === GlobalConstants.BOOL_FALSE ? false : true;
 }

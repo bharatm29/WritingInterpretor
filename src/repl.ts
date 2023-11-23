@@ -11,6 +11,12 @@ const rs = readline.createInterface({
 });
 
 rs.on("line", (input) => {
+    if(input === "clear"){
+        console.clear();
+        console.log(PROMPT);
+        return;
+    }
+
     const lex = new Lexer(input);
 
     const parser = new Parser(lex);

@@ -2,7 +2,7 @@ import { test, expect } from "vitest";
 import { Boolean, Integer, InterpretObject } from "../eval/interpretObject";
 import { Lexer } from "../lexer/lexer";
 import { Parser } from "../ast/Parser";
-import { evalAST } from "../eval/eval";
+import { GlobalConstants, evalAST } from "../eval/eval";
 
 //the heart function that calls the evalAST method :)
 function testEval(input: string): InterpretObject {
@@ -181,6 +181,49 @@ test("Evaluating Prefix Expressions - Bang(!)", () => {
     });
 });
 
+test("Evaluating If-Else Expressions", () => {
+    type IfElseTests = {
+        input: string,
+        expected: any
+    };
+
+    const tests: IfElseTests[] = [
+        {
+            input: "if (true) { 10 }", expected: 10
+        },
+        {
+            input: "if (false) { 10 }", expected: null //if the condition for 'if' is false and there is no else then NULL should be returned
+        },
+        {
+            input: "if (1) { 10 }", expected: 10
+        },
+        {
+            input: "if (1 < 2) { 10 }", expected: 10
+        },
+        {
+            input: "if (1 > 2) { 10 }", expected: null
+        },
+        {
+            input: "if (1 > 2) { 10 } else { 20 }", expected: 20
+        },
+        {
+            input: "if (1 < 2) { 10 } else { 20 }", expected: 10
+        },
+    ];
+
+    tests.forEach(t => {
+        const evaluated = testEval(t.input);
+
+        if(typeof t.expected === "number"){
+            testIntegerObject(evaluated, t.expected);
+        }
+
+        else {
+            testNullObject(evaluated);
+        }
+    });
+});
+
 function testIntegerObject(obj: InterpretObject, expected: number): void {
     expect(obj).toBeInstanceOf(Integer);
  
@@ -195,4 +238,8 @@ function testBooleanObject(obj: InterpretObject, expected: boolean): void {
     const boolObj = obj as Boolean;
 
     expect(boolObj.value).toBe(expected);
+}
+
+function testNullObject(obj: InterpretObject): void {
+    expect(obj).toBe(GlobalConstants.NULL);
 }
