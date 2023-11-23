@@ -2,6 +2,8 @@ import { BooleanExpression, CallExpression, Expression, ExpressionStatement, Fun
 import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
+import { test, expect } from "vitest"
+
 test("Testing parsing let statements without expression parsing", () => {
     const input = `
         let x = 5;

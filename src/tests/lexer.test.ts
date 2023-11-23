@@ -1,6 +1,8 @@
 import { Lexer } from "../lexer/lexer";
 import { Token, TokenType } from "../lexer/token";
 
+import { test, expect } from "vitest"
+
 test("testing Lexer's nextToken(): 1", () => {
     const input: string = "=+(){},;";
 
