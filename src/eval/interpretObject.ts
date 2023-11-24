@@ -2,6 +2,7 @@ export enum ObjectType {
     INT_OBJ = "Int_obj",
     BOOL_OBJ = "Bool_obj",
     NULL_OBJ = "Null_obj",
+    RESULT_OBJ = "Result_obj",
 }
 
 export interface InterpretObject {
@@ -37,5 +38,16 @@ export class Null implements InterpretObject {
     }
     inspect(): string {
         return "Null";
+    }
+}
+
+export class ReturnValue implements InterpretObject {
+    constructor(public value: InterpretObject, ){}
+
+    type(): ObjectType {
+        return ObjectType.RESULT_OBJ;
+    }
+    inspect(): string {
+        return this.value.inspect();
     }
 }

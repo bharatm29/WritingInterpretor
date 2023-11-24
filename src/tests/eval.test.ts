@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { Boolean, Integer, InterpretObject } from "../eval/interpretObject";
+import { Boolean, Integer, InterpretObject, ReturnValue } from "../eval/interpretObject";
 import { Lexer } from "../lexer/lexer";
 import { Parser } from "../ast/Parser";
 import { GlobalConstants, evalAST } from "../eval/eval";
@@ -214,7 +214,7 @@ test("Evaluating If-Else Expressions", () => {
     tests.forEach(t => {
         const evaluated = testEval(t.input);
 
-        if(typeof t.expected === "number"){
+        if (typeof t.expected === "number") {
             testIntegerObject(evaluated, t.expected);
         }
 
@@ -224,9 +224,36 @@ test("Evaluating If-Else Expressions", () => {
     });
 });
 
+test("Evaluating Result Statements", () => {
+    type ResultTests = {
+        input: string,
+        expected: number
+    };
+
+    const tests: ResultTests[] = [
+        { input: "return 10;", expected: 10 },
+        { input: "return 10; 9;", expected: 10 },
+        { input: "return 2 * 5; 9;", expected: 10 },
+        { input: "9; return 2 * 5; 9;", expected: 10 },
+        { input: `
+            if (10 > 1) {
+                if (10 > 1) {
+                return 10;
+                }
+                return 1;
+            }
+            `, expected: 10},
+    ];
+
+    tests.forEach(t => {
+        const evaluated = testEval(t.input);
+        testIntegerObject(evaluated, t.expected);
+    });
+});
+
 function testIntegerObject(obj: InterpretObject, expected: number): void {
     expect(obj).toBeInstanceOf(Integer);
- 
+
     const intObj = obj as Integer;
 
     expect(intObj.value).toBe(expected);
@@ -234,7 +261,7 @@ function testIntegerObject(obj: InterpretObject, expected: number): void {
 
 function testBooleanObject(obj: InterpretObject, expected: boolean): void {
     expect(obj).toBeInstanceOf(Boolean);
- 
+
     const boolObj = obj as Boolean;
 
     expect(boolObj.value).toBe(expected);

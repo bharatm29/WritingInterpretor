@@ -1,4 +1,4 @@
-import { ASTNode, BlockStatement, BooleanExpression, Expression, ExpressionStatement, IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, Program, Statement } from "../ast/ast";
+import { ASTNode, BlockStatement, BooleanExpression, Expression, ExpressionStatement, IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
 import * as Obj from "./interpretObject";
 
 export class GlobalConstants {
@@ -11,7 +11,7 @@ export function evalAST(node: ASTNode): Obj.InterpretObject {
     switch (node.constructor.name) {
         //statements
         case "Program":
-            return evalStatements((node as Program).statements);
+            return evalProgram((node as Program).statements);
 
         case "ExpressionStatement":
             return evalAST((node as ExpressionStatement).expression as Expression);
@@ -37,22 +37,44 @@ export function evalAST(node: ASTNode): Obj.InterpretObject {
 
         //evaluating if expressions
         case "BlockStatement":
-            return evalStatements((node as BlockStatement).statements);
- 
+            return evalBlockStatements((node as BlockStatement));
+
         case "IfExpression":
             return evalIfExpression((node as IfExpression));
+
+        case "ReturnStatement":
+            const val = evalAST((node as ReturnStatement).returnValue as Expression);
+            return new Obj.ReturnValue(val);
 
         default:
             return GlobalConstants.NULL;
     }
 }
 
-function evalStatements(statements: Statement[]): Obj.InterpretObject {
+function evalProgram(statements: Statement[]): Obj.InterpretObject {
     let result: Obj.InterpretObject = GlobalConstants.NULL;
 
-    statements.forEach(st => {
+    for (let st of statements) {
         result = evalAST(st);
-    });
+
+        if (result instanceof Obj.ReturnValue) {
+            return result.value;
+        }
+    }
+
+    return result;
+}
+
+function evalBlockStatements(block: BlockStatement): Obj.InterpretObject {
+    let result: Obj.InterpretObject = GlobalConstants.NULL;
+
+    for (let st of block.statements) {
+        result = evalAST(st);
+
+        if (result.type() === Obj.ObjectType.RESULT_OBJ) {
+            return result;
+        }
+    }
 
     return result;
 }
@@ -101,10 +123,10 @@ function evalInfixExpression(operator: string, left: Obj.InterpretObject, right:
     }
 
     //for boolean operands
-    else if (operator === "=="){
+    else if (operator === "==") {
         return nativeBoolToBooleanObject(left === right);
     }
-    else if (operator === "!="){
+    else if (operator === "!=") {
         return nativeBoolToBooleanObject(left !== right);
     }
 
@@ -146,10 +168,10 @@ function nativeBoolToBooleanObject(b: boolean): Obj.InterpretObject {
 function evalIfExpression(ienode: IfExpression): Obj.InterpretObject {
     const condition = evalAST(ienode.condition as Expression);
 
-    if(isTruthy(condition)){
+    if (isTruthy(condition)) {
         return evalAST(ienode.consequence as BlockStatement);
     }
-    else{
+    else {
         return ienode.alternative ? evalAST(ienode.alternative as BlockStatement) : GlobalConstants.NULL;
     }
 }
