@@ -77,7 +77,7 @@ export class LetStatement implements Statement {
         str += this.name.string();
         str += " = ";
 
-        if(this.value){
+        if (this.value) {
             str += this.value.string();
         }
 
@@ -107,7 +107,7 @@ export class ReturnStatement implements Statement {
 
         str += this.tokenLiteral() + " ";
 
-        if(this.returnValue){
+        if (this.returnValue) {
             str += this.returnValue.string();
         }
 
@@ -206,11 +206,11 @@ export class InfixExpression implements Expression {
     }
 }
 
-export class BooleanExpression implements Expression{
+export class BooleanExpression implements Expression {
     constructor(
         public token: Token,
         public value: boolean
-    ){ }
+    ) { }
 
     expressionNode(): void {
         throw new Error("Method not implemented.");
@@ -230,7 +230,7 @@ export class IfExpression implements Expression {
 
     constructor(
         public token: Token,
-    ) {}
+    ) { }
 
     expressionNode(): void {
         throw new Error("Method not implemented.");
@@ -241,7 +241,7 @@ export class IfExpression implements Expression {
     string(): string {
         let str = `if (${this.condition?.string()}) ${this.consequence?.string()}`;
 
-        if(this.alternative){
+        if (this.alternative) {
             str += ` else ${this.alternative.string()}`;
         }
         return str;
@@ -251,7 +251,7 @@ export class IfExpression implements Expression {
 export class BlockStatement implements Statement {
     public statements: Statement[];
 
-    constructor(public token: Token){
+    constructor(public token: Token) {
         this.statements = [];
     }
 
@@ -302,7 +302,7 @@ export class CallExpression implements Expression {
     public func?: Expression
     public arguments: Expression[];
 
-    constructor(public token: Token){
+    constructor(public token: Token) {
         this.arguments = [];
     }
 

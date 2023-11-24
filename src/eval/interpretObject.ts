@@ -63,3 +63,25 @@ export class Error implements InterpretObject {
         return "ERROR: " + this.message;
     }
 }
+
+export class Environment {
+    public store: Map<String, InterpretObject>;
+
+    constructor() {
+        this.store = new Map();
+    }
+
+    get(name: string): InterpretObject | undefined {
+        return this.store.get(name);
+    }
+
+    set(name: string, val: InterpretObject): InterpretObject {
+        this.store.set(name, val);
+
+        return val;
+    }
+}
+
+export function newEnvironment() {
+    return new Environment();
+}

@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { Boolean, Error, Integer, InterpretObject, ReturnValue } from "../eval/interpretObject";
+import { Boolean, Error, Integer, InterpretObject, ReturnValue, newEnvironment } from "../eval/interpretObject";
 import { Lexer } from "../lexer/lexer";
 import { Parser } from "../ast/Parser";
 import { GlobalConstants, evalAST } from "../eval/eval";
@@ -9,8 +9,9 @@ function testEval(input: string): InterpretObject {
     const lex = new Lexer(input);
     const parser = new Parser(lex);
     const program = parser.parseProgram();
+    const env = newEnvironment();
 
-    const evalRes = evalAST(program);
+    const evalRes = evalAST(program, env);
     // expect(evalRes).not.toBeNull();
 
     return evalRes as InterpretObject;
@@ -292,8 +293,12 @@ test("Testing Error handling", () => {
                     }
                     return 1;
                 }
-                `,
+            `,
             expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            input: "foobar",
+            expectedMessage: "identifier not found: foobar",
         },
     ];
 
@@ -305,6 +310,24 @@ test("Testing Error handling", () => {
         const errorObj = (evaluated as Error);
 
         expect(errorObj.message).toBe(t.expectedMessage);
+    });
+});
+
+test("Evaluating Let Statements", () => {
+    type LetTests = {
+        input: string,
+        expected: number,
+    };
+
+    const tests: LetTests[] = [
+        { input: "let a = 5; a;", expected: 5 },
+        { input: "let a = 5 * 5; a;", expected: 25 },
+        { input: "let a = 5; let b = a; b;", expected: 5 },
+        { input: "let a = 5; let b = a; let c = a + b + 5; c;", expected: 15 },
+    ];
+
+    tests.forEach(t => {
+        testIntegerObject(testEval(t.input), t.expected);;
     });
 });
 
