@@ -1,0 +1,35 @@
+(You have to provide a semi-color after every statement)
+
+Like any interpretor it works like a calculator
+>> 1 + 2;
+3
+
+>> (9 * 7) / 2;
+31.5
+
+Declare variable using let keyword and access them using the Identifier
+>> let age = 19;
+>> age;
+19
+
+Functions are first class and higher order so you can assign them to a variable
+>> let add = fn(a, b){ return a + b; };
+Null
+>> add(50, 49);
+99
+
+You can even make a instantly executing function
+>> fn(a, b){return a * b * 7; }(4, 5);
+140
+
+Call the function like any other languages
+>> let i = 1 + 2 + add(2, 3);
+Null
+>> i
+9
+
+You can also create closures!!!
+>> let newAdder = fn(x) { fn(y) { x + y } };
+>> let addTwo = newAdder(2);
+>> addTwo(3);
+5
