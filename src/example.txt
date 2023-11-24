@@ -1,4 +1,4 @@
-(You have to provide a semi-color after every statement)
+(You have to provide a semi-colon after every statement)
 
 Like any interpretor it works like a calculator
 >> 1 + 2;
@@ -18,11 +18,11 @@ Null
 >> add(50, 49);
 99
 
-You can even make a instantly executing function
+You can even make an instantly executing function
 >> fn(a, b){return a * b * 7; }(4, 5);
 140
 
-Call the function like any other languages
+Call the function like in any other languages
 >> let i = 1 + 2 + add(2, 3);
 Null
 >> i
