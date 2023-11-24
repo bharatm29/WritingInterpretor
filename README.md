@@ -14,3 +14,8 @@ Then for running the parser:
 ```shell
 npm run parse
 ```
+
+Then for running the repl:
+```shell
+npm run repl
+```
