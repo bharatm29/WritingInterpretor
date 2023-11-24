@@ -1,4 +1,4 @@
-import { ASTNode, BlockStatement, BooleanExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
+import { ASTNode, BlockStatement, BooleanExpression, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
 import * as Obj from "./interpretObject";
 
 export class GlobalConstants {
@@ -80,8 +80,28 @@ export function evalAST(node: ASTNode, env: Obj.Environment): Obj.InterpretObjec
 
         case "FunctionLiteral":
             const funcNode = node as FunctionLiteral;
+
+            const env_clone = Obj.newEnvironment();
+            env_clone.store = new Map(env.store);
+
             //This can be dangerous since no null checking
-            return new Obj.FunctionObj(funcNode.parameters as Identifier[], funcNode.body as BlockStatement, env);
+            return new Obj.FunctionObj(funcNode.parameters as Identifier[], funcNode.body as BlockStatement, env_clone); //env should be copied?
+
+        case "CallExpression":
+            const callNode = (node as CallExpression);
+            const func = evalAST(callNode.func as Expression, env);
+
+            if (isError(func)) {
+                return func;
+            }
+
+            const args = evalExpressions(callNode.arguments, env);
+
+            if (args.length === 1 && isError(args[0])) {
+                return args[0];
+            }
+
+            return callFunction(func, args);
 
         default:
             return GlobalConstants.NULL;
@@ -122,7 +142,21 @@ function evalBlockStatements(block: BlockStatement, env: Obj.Environment): Obj.I
 
     return result;
 }
+function evalExpressions(exprs: Expression[], env: Obj.Environment): Obj.InterpretObject[] {
+    const res: Obj.InterpretObject[] = [];
 
+    for (let exp of exprs) {
+        const evaluated = evalAST(exp, env);
+
+        if (isError(evaluated)) {
+            return [evaluated];
+        }
+
+        res.push(evaluated);
+    }
+
+    return res;
+}
 function evalPrefixExpressions(operator: string, right: Obj.InterpretObject): Obj.InterpretObject {
     switch (operator) {
         case "!":
@@ -235,6 +269,37 @@ function evalIdentifier(node: Identifier, env: Obj.Environment): Obj.InterpretOb
     }
 
     return val;
+}
+
+function callFunction(func: Obj.InterpretObject, args: Obj.InterpretObject[]): Obj.InterpretObject {
+    if (!(func instanceof Obj.FunctionObj)) {
+        return newError("not a function: ", func.type());
+    }
+
+    const functionObj = func as Obj.FunctionObj;
+
+    const extendedEnv = extendFunctionEnv(functionObj, args);
+    const evaluated = evalAST(functionObj.body, extendedEnv);
+
+    return unwrapReturnValue(evaluated);
+}
+
+function extendFunctionEnv(func: Obj.FunctionObj, args: Obj.InterpretObject[]): Obj.Environment {
+    const extendedEnv = Obj.newEnclosedEnvironment(func.env);
+
+    func.parameters.forEach((paramIdent, index) => {
+        extendedEnv.set(paramIdent.value, args[index]);
+    });
+
+    return extendedEnv;
+}
+
+function unwrapReturnValue(obj: Obj.InterpretObject): Obj.InterpretObject {
+    if (obj instanceof Obj.ReturnValue) {
+        return obj.value;
+    }
+
+    return obj;
 }
 
 function isTruthy(condition: Obj.InterpretObject): boolean {

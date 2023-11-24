@@ -331,7 +331,7 @@ test("Evaluating Let Statements", () => {
     });
 });
 
-test("Evaluating Functions", () => {
+test("Evaluating Functions - Internal Representation", () => {
     const input = "fn(x) { x + 2; };";
 
     const evaluated = testEval(input);
@@ -347,6 +347,26 @@ test("Evaluating Functions", () => {
     const expectedBody = "(x + 2)";
 
     expect(funcObj.body.string()).toBe(expectedBody);
+});
+
+test("Evaluating Functions - Function calls", () => {
+    type FunctionTest = {
+        input: string,
+        expected: number
+    };
+
+    const tests: FunctionTest[] = [
+        { input: "let identity = fn(x) { x; }; identity(5);", expected: 5 },
+        { input: "let identity = fn(x) { return x; }; identity(5);", expected: 5 },
+        { input: "let double = fn(x) { x * 2; }; double(5);", expected: 10 },
+        { input: "let add = fn(x, y) { x + y;  }; add(5, 5);", expected: 10 },
+        { input: "let add = fn(x, y) { x + y;  }; add(5 + 5, add(5, 5));", expected: 20 },
+        { input: "fn(x) { x; }(5)", expected: 5 },
+    ];
+
+    tests.forEach(t => {
+        testIntegerObject(testEval(t.input), t.expected);
+    });
 });
 
 function testIntegerObject(obj: InterpretObject, expected: number): void {

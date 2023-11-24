@@ -69,13 +69,20 @@ export class Error implements InterpretObject {
 
 export class Environment {
     public store: Map<String, InterpretObject>;
+    public outer?: Environment;
 
     constructor() {
         this.store = new Map();
     }
 
     get(name: string): InterpretObject | undefined {
-        return this.store.get(name);
+        const val = this.store.get(name);
+
+        if (!val && this.outer) {
+            return this.outer.get(name);
+        }
+
+        return val;
     }
 
     set(name: string, val: InterpretObject): InterpretObject {
@@ -85,15 +92,22 @@ export class Environment {
     }
 }
 
-export function newEnvironment() {
+export function newEnvironment(): Environment {
     return new Environment();
+}
+
+export function newEnclosedEnvironment(outer: Environment): Environment {
+    const env = new Environment();
+    env.outer = outer;
+
+    return env;
 }
 
 export class FunctionObj implements InterpretObject {
     constructor(
         public parameters: Identifier[],
         public body: BlockStatement,
-        env: Environment
+        public env: Environment
     ) { }
 
     type(): ObjectType {
