@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { Boolean, Error, Integer, InterpretObject, ReturnValue, newEnvironment } from "../eval/interpretObject";
+import { Boolean, Error, FunctionObj, Integer, InterpretObject, ReturnValue, newEnvironment } from "../eval/interpretObject";
 import { Lexer } from "../lexer/lexer";
 import { Parser } from "../ast/Parser";
 import { GlobalConstants, evalAST } from "../eval/eval";
@@ -329,6 +329,24 @@ test("Evaluating Let Statements", () => {
     tests.forEach(t => {
         testIntegerObject(testEval(t.input), t.expected);;
     });
+});
+
+test("Evaluating Functions", () => {
+    const input = "fn(x) { x + 2; };";
+
+    const evaluated = testEval(input);
+
+    expect(evaluated).toBeInstanceOf(FunctionObj);
+
+    const funcObj = evaluated as FunctionObj;
+
+    expect(funcObj.parameters.length).toBe(1);
+
+    expect(funcObj.parameters[0].string()).toBe("x");
+
+    const expectedBody = "(x + 2)";
+
+    expect(funcObj.body.string()).toBe(expectedBody);
 });
 
 function testIntegerObject(obj: InterpretObject, expected: number): void {

@@ -264,7 +264,7 @@ export class BlockStatement implements Statement {
     string(): string {
         return this.statements.reduce((str, statement) => {
             return str + statement.string() + " ";
-        }, "");
+        }, "").trim();
     }
 }
 

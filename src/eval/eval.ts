@@ -1,4 +1,4 @@
-import { ASTNode, BlockStatement, BooleanExpression, Expression, ExpressionStatement, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
+import { ASTNode, BlockStatement, BooleanExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
 import * as Obj from "./interpretObject";
 
 export class GlobalConstants {
@@ -77,6 +77,11 @@ export function evalAST(node: ASTNode, env: Obj.Environment): Obj.InterpretObjec
 
         case "Identifier":
             return evalIdentifier(node as Identifier, env);
+
+        case "FunctionLiteral":
+            const funcNode = node as FunctionLiteral;
+            //This can be dangerous since no null checking
+            return new Obj.FunctionObj(funcNode.parameters as Identifier[], funcNode.body as BlockStatement, env);
 
         default:
             return GlobalConstants.NULL;

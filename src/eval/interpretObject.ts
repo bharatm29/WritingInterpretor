@@ -1,9 +1,12 @@
+import { BlockStatement, Identifier } from "../ast/ast";
+
 export enum ObjectType {
     INT_OBJ = "INTEGER",
     BOOL_OBJ = "BOOLEAN",
     NULL_OBJ = "NULL",
     RETURN_OBJ = "RETURN_VAL",
     ERROR_OBJ = "ERROR",
+    FUNCTION_OBJ = "FUNCTION",
 }
 
 export interface InterpretObject {
@@ -84,4 +87,30 @@ export class Environment {
 
 export function newEnvironment() {
     return new Environment();
+}
+
+export class FunctionObj implements InterpretObject {
+    constructor(
+        public parameters: Identifier[],
+        public body: BlockStatement,
+        env: Environment
+    ) { }
+
+    type(): ObjectType {
+        return ObjectType.FUNCTION_OBJ;
+    }
+    inspect(): string {
+        let st = "";
+
+        const params: string = this.parameters.map(p => p.string()).join(",");
+
+        st += `fn`;
+        st += `(`;
+        st += params;
+        st += `){\n`;
+
+        st += this.body.string() + "\n}";
+
+        return st;
+    }
 }
