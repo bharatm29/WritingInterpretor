@@ -27,6 +27,7 @@ export enum TokenType {
     RETURN = "Return",
     NOTEQUAL = "Notequal",
     EQUAL = "Equal",
+    STRING = "String",
 }
 
 export type Token = {

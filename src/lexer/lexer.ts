@@ -83,6 +83,10 @@ export class Lexer {
             case '}':
                 token = this.newToken(TokenType.RBRACE, this.ch);
                 break;
+            case '"':
+                token.literal = this.readString();
+                token.tokenType = TokenType.STRING;
+                break;
             case '\0':
                 token = {
                     tokenType: TokenType.EOF,
@@ -182,6 +186,20 @@ export class Lexer {
         return this.input.substring(position, this.position);
     }
 
+    private readString(): string {
+        const pos = this.position + 1;
+
+        this.readChar();
+
+        while(this.ch !== '"'){
+            this.readChar();
+        }
+
+        this.readChar();
+
+        return this.input.substring(pos, this.position - 1);
+    }
+
     private peekChar(): string {
         if(this.readPosition >= this.input.length){
             return '\0';
@@ -190,21 +208,3 @@ export class Lexer {
         return this.input[this.readPosition];
     }
 }
-
-const input: string = `
-    let five = 5;
-    let ten = 10;
-    let add = fn(x, y) {
-        x + y;
-    };
-    let result = add(five, ten);
-    !-/*5;
-    5 < 10 > 5;
-    if (5 < 10) {
-        return true;
-    } else {
-        return false;
-    }
-    10 == 10;
-    10 != 9;
-`;

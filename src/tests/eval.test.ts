@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { Boolean, Error, FunctionObj, Integer, InterpretObject, ReturnValue, newEnvironment } from "../eval/interpretObject";
+import { Boolean, Error, FunctionObj, Integer, InterpretObject, newEnvironment } from "../eval/interpretObject";
 import { Lexer } from "../lexer/lexer";
 import { Parser } from "../ast/Parser";
 import { GlobalConstants, evalAST } from "../eval/eval";
@@ -12,7 +12,6 @@ function testEval(input: string): InterpretObject {
     const env = newEnvironment();
 
     const evalRes = evalAST(program, env);
-    // expect(evalRes).not.toBeNull();
 
     return evalRes as InterpretObject;
 }
