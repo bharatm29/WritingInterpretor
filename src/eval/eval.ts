@@ -25,6 +25,11 @@ export function evalAST(node: ASTNode): Obj.InterpretObject {
         case "PrefixExpression":
             const prefixNode = node as PrefixExpression;
             const rightEval = evalAST(prefixNode.right as Expression);
+
+            if (isError(rightEval)) {
+                return rightEval;
+            }
+
             return evalPrefixExpressions(prefixNode.operator, rightEval);
 
         case "InfixExpression":
@@ -32,6 +37,14 @@ export function evalAST(node: ASTNode): Obj.InterpretObject {
 
             const left = evalAST(infixNode.left as Expression);
             const right = evalAST(infixNode.right as Expression);
+
+            if (isError(left)) {
+                return left;
+            }
+
+            if (isError(right)) {
+                return right;
+            }
 
             return evalInfixExpression(infixNode.operator, left, right);
 
@@ -44,11 +57,20 @@ export function evalAST(node: ASTNode): Obj.InterpretObject {
 
         case "ReturnStatement":
             const val = evalAST((node as ReturnStatement).returnValue as Expression);
+
+            if (isError(val)) {
+                return val;
+            }
+
             return new Obj.ReturnValue(val);
 
         default:
             return GlobalConstants.NULL;
     }
+}
+
+function isError(obj: Obj.InterpretObject): boolean {
+    return obj.type() === Obj.ObjectType.ERROR_OBJ;
 }
 
 function evalProgram(statements: Statement[]): Obj.InterpretObject {
@@ -59,6 +81,9 @@ function evalProgram(statements: Statement[]): Obj.InterpretObject {
 
         if (result instanceof Obj.ReturnValue) {
             return result.value;
+        }
+        else if (result instanceof Obj.Error) {
+            return result;
         }
     }
 
@@ -71,7 +96,7 @@ function evalBlockStatements(block: BlockStatement): Obj.InterpretObject {
     for (let st of block.statements) {
         result = evalAST(st);
 
-        if (result.type() === Obj.ObjectType.RESULT_OBJ) {
+        if (result.type() === Obj.ObjectType.RETURN_OBJ || result.type() === Obj.ObjectType.ERROR_OBJ) {
             return result;
         }
     }
@@ -86,7 +111,7 @@ function evalPrefixExpressions(operator: string, right: Obj.InterpretObject): Ob
         case "-":
             return evalMinusPrefixOperatorExpression(right);
         default:
-            return GlobalConstants.NULL;
+            return newError("unknown operator: ", operator, right.type());
     }
 }
 
@@ -108,7 +133,7 @@ function evalBangOperatorExpression(right: Obj.InterpretObject): Obj.InterpretOb
 
 function evalMinusPrefixOperatorExpression(right: Obj.InterpretObject): Obj.InterpretObject {
     if (!(right instanceof Obj.Integer)) {
-        return GlobalConstants.NULL;
+        return newError("unknown operator: -", right.type());
     }
 
     const value = (right as Obj.Integer).value;
@@ -117,6 +142,9 @@ function evalMinusPrefixOperatorExpression(right: Obj.InterpretObject): Obj.Inte
 }
 
 function evalInfixExpression(operator: string, left: Obj.InterpretObject, right: Obj.InterpretObject): Obj.InterpretObject {
+    if (left.type() !== right.type()) {
+        return newError("type mismatch: ", left.type(), operator, right.type());
+    }
     //if both left and right are integers
     if (left.type() === Obj.ObjectType.INT_OBJ && right.type() === Obj.ObjectType.INT_OBJ) {
         return evalIntegerInfixExpression(operator, left, right);
@@ -131,7 +159,7 @@ function evalInfixExpression(operator: string, left: Obj.InterpretObject, right:
     }
 
     else {
-        return GlobalConstants.NULL;
+        return newError("unknown operator: ", left.type(), operator, right.type());
     }
 }
 
@@ -157,7 +185,7 @@ function evalIntegerInfixExpression(operator: string, left: Obj.InterpretObject,
         case "!=":
             return nativeBoolToBooleanObject(leftVal !== rightVal);
         default:
-            return GlobalConstants.NULL;
+            return newError("unknown operator: ", left.type(), operator, right.type());
     }
 }
 
@@ -167,6 +195,10 @@ function nativeBoolToBooleanObject(b: boolean): Obj.InterpretObject {
 
 function evalIfExpression(ienode: IfExpression): Obj.InterpretObject {
     const condition = evalAST(ienode.condition as Expression);
+
+    if (isError(condition)) {
+        return condition;
+    }
 
     if (isTruthy(condition)) {
         return evalAST(ienode.consequence as BlockStatement);
@@ -178,4 +210,10 @@ function evalIfExpression(ienode: IfExpression): Obj.InterpretObject {
 
 function isTruthy(condition: Obj.InterpretObject): boolean {
     return condition === GlobalConstants.NULL || condition === GlobalConstants.BOOL_FALSE ? false : true;
+}
+
+function newError(message: string, ...a: any[]) {
+    const errorInstances: string = a.reduce((acc, s) => acc + s + " ", "").trim();
+
+    return new Obj.Error(`${message}${errorInstances}`);
 }

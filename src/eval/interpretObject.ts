@@ -1,8 +1,9 @@
 export enum ObjectType {
-    INT_OBJ = "Int_obj",
-    BOOL_OBJ = "Bool_obj",
-    NULL_OBJ = "Null_obj",
-    RESULT_OBJ = "Result_obj",
+    INT_OBJ = "INTEGER",
+    BOOL_OBJ = "BOOLEAN",
+    NULL_OBJ = "NULL",
+    RETURN_OBJ = "RETURN_VAL",
+    ERROR_OBJ = "ERROR",
 }
 
 export interface InterpretObject {
@@ -42,12 +43,23 @@ export class Null implements InterpretObject {
 }
 
 export class ReturnValue implements InterpretObject {
-    constructor(public value: InterpretObject, ){}
+    constructor(public value: InterpretObject,) { }
 
     type(): ObjectType {
-        return ObjectType.RESULT_OBJ;
+        return ObjectType.RETURN_OBJ;
     }
     inspect(): string {
         return this.value.inspect();
+    }
+}
+
+export class Error implements InterpretObject {
+    constructor(public message: string) { }
+
+    type(): ObjectType {
+        return ObjectType.ERROR_OBJ;
+    }
+    inspect(): string {
+        return "ERROR: " + this.message;
     }
 }

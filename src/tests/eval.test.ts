@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { Boolean, Integer, InterpretObject, ReturnValue } from "../eval/interpretObject";
+import { Boolean, Error, Integer, InterpretObject, ReturnValue } from "../eval/interpretObject";
 import { Lexer } from "../lexer/lexer";
 import { Parser } from "../ast/Parser";
 import { GlobalConstants, evalAST } from "../eval/eval";
@@ -235,19 +235,76 @@ test("Evaluating Result Statements", () => {
         { input: "return 10; 9;", expected: 10 },
         { input: "return 2 * 5; 9;", expected: 10 },
         { input: "9; return 2 * 5; 9;", expected: 10 },
-        { input: `
+        {
+            input: `
             if (10 > 1) {
                 if (10 > 1) {
                 return 10;
                 }
                 return 1;
             }
-            `, expected: 10},
+            `, expected: 10
+        },
     ];
 
     tests.forEach(t => {
         const evaluated = testEval(t.input);
         testIntegerObject(evaluated, t.expected);
+    });
+});
+
+test("Testing Error handling", () => {
+    type ErrorTest = {
+        input: string,
+        expectedMessage: string,
+    };
+
+    const tests: ErrorTest[] = [
+        {
+            input: "5 + true;",
+            expectedMessage: "type mismatch: INTEGER + BOOLEAN",
+        },
+        {
+            input: "5 + true; 5;",
+            expectedMessage: "type mismatch: INTEGER + BOOLEAN",
+        },
+        {
+            input: "-true",
+            expectedMessage: "unknown operator: -BOOLEAN",
+        },
+        {
+            input: "true + false;",
+            expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            input: "5; true + false; 5",
+            expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            input: "if (10 > 1) { true + false; }",
+            expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            input: `
+                if (10 > 1) {
+                    if (10 > 1) {
+                        return true + false;
+                    }
+                    return 1;
+                }
+                `,
+            expectedMessage: "unknown operator: BOOLEAN + BOOLEAN",
+        },
+    ];
+
+    tests.forEach(t => {
+        const evaluated = testEval(t.input);
+
+        expect(evaluated).toBeInstanceOf(Error);
+
+        const errorObj = (evaluated as Error);
+
+        expect(errorObj.message).toBe(t.expectedMessage);
     });
 });
 
