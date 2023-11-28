@@ -8,6 +8,7 @@ export enum ObjectType {
     ERROR_OBJ = "ERROR",
     FUNCTION_OBJ = "FUNCTION",
     STRING_OBJ = "STRING",
+    BUILTIN_OBJ = "BUILTIN",
 }
 
 export interface InterpretObject {
@@ -144,3 +145,33 @@ export class StringObj implements InterpretObject {
     }
 
 }
+
+export class Builtin implements InterpretObject {
+    constructor(
+        public builtinFunction: Function,
+    ) {}
+
+    inspect(): string {
+        return "builtin function";
+    }
+
+    type(): ObjectType {
+        return ObjectType.BUILTIN_OBJ;
+    }
+}
+
+export const builtins: Map<string, Builtin> = new Map();
+builtins.set("len", new Builtin(
+    (...args: InterpretObject[]): InterpretObject => {
+        if (args.length !== 1){
+            return new Error(`wrong number of arguments. got=${args.length}, want=1`);
+        }
+
+        switch (args[0].constructor.name) {
+            case "StringObj":
+                return new Integer((args[0] as StringObj).value.length);
+            default:
+                return new Error(`argument to len not supported, got ${args[0].type()}`);
+        }
+    }
+));

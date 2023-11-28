@@ -18,6 +18,7 @@ import {
     StringLiteral
 } from "../ast/ast";
 import * as Obj from "./interpretObject";
+import {Builtin} from "./interpretObject";
 
 export class GlobalConstants {
     public static BOOL_TRUE: Obj.Boolean = new Obj.Boolean(true);
@@ -224,6 +225,10 @@ function evalInfixExpression(operator: string, left: Obj.InterpretObject, right:
         return evalIntegerInfixExpression(operator, left, right);
     }
 
+    else if (left.type() === Obj.ObjectType.STRING_OBJ && right.type() === Obj.ObjectType.STRING_OBJ){
+        return evalStringInfixExpression(operator, left, right);
+    }
+
     //for boolean operands
     else if (operator === "==") {
         return nativeBoolToBooleanObject(left === right);
@@ -263,6 +268,17 @@ function evalIntegerInfixExpression(operator: string, left: Obj.InterpretObject,
     }
 }
 
+function evalStringInfixExpression(operator: string, left: Obj.InterpretObject, right: Obj.InterpretObject): Obj.InterpretObject {
+    if(operator !== "+"){
+        return newError("unknown operator: ", left.type(), operator, right.type());
+    }
+
+    const lVal = (left as Obj.StringObj).value;
+    const rVal = (right as Obj.StringObj).value;
+
+    return new Obj.StringObj(lVal + rVal);
+}
+
 function nativeBoolToBooleanObject(b: boolean): Obj.InterpretObject {
     return b ? GlobalConstants.BOOL_TRUE : GlobalConstants.BOOL_FALSE;
 }
@@ -283,26 +299,34 @@ function evalIfExpression(ienode: IfExpression, env: Obj.Environment): Obj.Inter
 }
 
 function evalIdentifier(node: Identifier, env: Obj.Environment): Obj.InterpretObject {
-    const val = env.get(node.value);
+    const envVal = env.get(node.value);
 
-    if (!val) {
+    if (envVal) {
+        return envVal;
+    }
+    else if (Obj.builtins.has(node.value)){
+        return Obj.builtins.get(node.value) as Obj.Builtin;
+    }
+    else{
         return newError("identifier not found: " + node.value);
     }
-
-    return val;
 }
 
 function callFunction(func: Obj.InterpretObject, args: Obj.InterpretObject[]): Obj.InterpretObject {
-    if (!(func instanceof Obj.FunctionObj)) {
-        return newError("not a function: ", func.type());
+    switch (func.constructor.name) {
+        case "FunctionObj":
+            const functionObj = func as Obj.FunctionObj;
+
+            const extendedEnv = extendFunctionEnv(functionObj, args);
+            const evaluated = evalAST(functionObj.body, extendedEnv);
+
+            return unwrapReturnValue(evaluated);
+        case "Builtin":
+            return (func as Builtin).builtinFunction(...args);
+        default:
+            return newError("not a function: ", func.type());
     }
 
-    const functionObj = func as Obj.FunctionObj;
-
-    const extendedEnv = extendFunctionEnv(functionObj, args);
-    const evaluated = evalAST(functionObj.body, extendedEnv);
-
-    return unwrapReturnValue(evaluated);
 }
 
 function extendFunctionEnv(func: Obj.FunctionObj, args: Obj.InterpretObject[]): Obj.Environment {

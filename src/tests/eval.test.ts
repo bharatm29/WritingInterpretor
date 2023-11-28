@@ -307,6 +307,10 @@ test("Testing Error handling", () => {
             input: "foobar",
             expectedMessage: "identifier not found: foobar",
         },
+        {
+            input: `"Hello" - "World"`,
+            expectedMessage: "unknown operator: STRING - STRING",
+        },
     ];
 
     tests.forEach(t => {
@@ -384,6 +388,44 @@ test("Evaluating String Literals", () => {
     expect(evaluated).toBeInstanceOf(StringObj);
 
     expect((evaluated as StringObj).value).toBe("hello, world");
+});
+
+test("Evaluating String Literals Concatenation", () => {
+    const input = '"hello" + " " + "world"';
+
+    const evaluated = testEval(input);
+
+    expect(evaluated).toBeInstanceOf(StringObj);
+
+    expect((evaluated as StringObj).value).toBe("hello world");
+});
+
+test("Evaluating Builtin function - len()", () => {
+    type LenTests = {
+        input: string,
+        expected: number | string
+    };
+
+    const tests: LenTests[] = [
+        { input: 'len("")', expected: 0 },
+        { input: 'len("four")', expected: 4 },
+        { input: 'len("hello world")', expected: 11 },
+        { input: 'len(1)', expected: "argument to len not supported, got INTEGER" },
+        { input: 'len("one", "two")', expected: "wrong number of arguments. got=2, want=1" },
+    ];
+
+    tests.forEach(t => {
+        const evaluated = testEval(t.input);
+
+        if (typeof t.expected === "number"){
+            testIntegerObject(evaluated, t.expected);
+        }
+        else{
+            expect(evaluated).toBeInstanceOf(Error);
+
+            expect((evaluated as Error).message).toBe(t.expected);
+        }
+    });
 });
 
 function testIntegerObject(obj: InterpretObject, expected: number): void {
