@@ -1,4 +1,4 @@
-import { Token, TokenType } from "./token";
+import {Token, TokenType} from "./token";
 
 export class Lexer {
     private position: number;
@@ -8,7 +8,7 @@ export class Lexer {
 
     constructor(
         private input: string,
-    ){
+    ) {
         this.position = 0;
         this.readPosition = 0;
         this.ch = '\0';
@@ -16,26 +16,26 @@ export class Lexer {
         this.keywords = this.initKeywords();
         this.readChar();
     }
+
     nextToken(): Token {
         let token: Token = {
-                    tokenType: TokenType.NULL,
-                    literal: ""
-                };
+            tokenType: TokenType.NULL,
+            literal: ""
+        };
 
         this.skipWhitespaces();
 
         switch (this.ch) {
             case '=': {
-                if(this.peekChar() == '='){
+                if (this.peekChar() == '=') {
                     const ch = this.ch;
                     this.readChar();
                     token = this.newToken(TokenType.EQUAL, ch + this.ch);
-                }
-                else {
+                } else {
                     token = this.newToken(TokenType.ASSIGN, this.ch);
                 }
             }
-            break;
+                break;
             case '+':
                 token = this.newToken(TokenType.PLUS, this.ch);
                 break;
@@ -43,12 +43,11 @@ export class Lexer {
                 token = this.newToken(TokenType.MINUS, this.ch);
                 break;
             case '!': {
-                if(this.peekChar() == '='){
+                if (this.peekChar() == '=') {
                     const ch = this.ch;
                     this.readChar();
                     token = this.newToken(TokenType.NOTEQUAL, ch + this.ch);
-                }
-                else {
+                } else {
                     token = this.newToken(TokenType.BANG, this.ch);
                 }
                 break;
@@ -94,17 +93,15 @@ export class Lexer {
                 };
                 break;
             default:
-                if(this.isLetter(this.ch)){
+                if (this.isLetter(this.ch)) {
                     token.literal = this.readIdentifier();
                     token.tokenType = this.lookupIdent(token.literal);
                     return token;
-                }
-                else if (this.isDigit(this.ch)) {
+                } else if (this.isDigit(this.ch)) {
                     token.tokenType = TokenType.INT
                     token.literal = this.readNumber()
                     return token;
-                }
-                else {
+                } else {
                     token = this.newToken(TokenType.ILLEGAL, this.ch);
                 }
                 break;
@@ -115,10 +112,9 @@ export class Lexer {
     }
 
     private readChar(): void {
-        if(this.readPosition >= this.input.length){
+        if (this.readPosition >= this.input.length) {
             this.ch = '\0'; //setting to the null character
-        }
-        else {
+        } else {
             this.ch = this.input[this.readPosition];
         }
 
@@ -128,25 +124,25 @@ export class Lexer {
     }
 
     private newToken(tokenType: TokenType, ch: string): Token {
-        return { tokenType, literal: ch };
+        return {tokenType, literal: ch};
     }
 
     private readIdentifier(): string {
         const position = this.position;
 
-        while(this.isLetter(this.ch)){
+        while (this.isLetter(this.ch)) {
             this.readChar();
         }
 
         return this.input.substring(position, this.position);
     }
 
-    private isLetter(ch: string): boolean{
+    private isLetter(ch: string): boolean {
         return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
     }
 
     private lookupIdent(ident: string): TokenType {
-        if(this.keywords.has(ident)){
+        if (this.keywords.has(ident)) {
             return this.keywords.get(ident) as TokenType;
         }
 
@@ -154,14 +150,14 @@ export class Lexer {
     }
 
     private initKeywords(): Map<string, TokenType> {
-        return new Map( [
+        return new Map([
             ["fn", TokenType.FUNCTION],
             ["let", TokenType.LET],
-        	["true", TokenType.TRUE],
-        	["false", TokenType.FALSE],
-        	["if", TokenType.IF],
-        	["else", TokenType.ELSE],
-        	["return", TokenType. RETURN]
+            ["true", TokenType.TRUE],
+            ["false", TokenType.FALSE],
+            ["if", TokenType.IF],
+            ["else", TokenType.ELSE],
+            ["return", TokenType.RETURN]
         ]);
 
     }
@@ -176,10 +172,10 @@ export class Lexer {
         return '0' <= ch && ch <= '9';
     }
 
-    private readNumber(): string{
+    private readNumber(): string {
         const position = this.position;
 
-        while(this.isDigit(this.ch)){
+        while (this.isDigit(this.ch)) {
             this.readChar();
         }
 
@@ -189,19 +185,19 @@ export class Lexer {
     private readString(): string {
         const pos = this.position + 1;
 
-        this.readChar();
-
-        while(this.ch !== '"'){
+        while (true) {
             this.readChar();
+
+            if (this.ch === '"' || this.ch === '\0') {
+                break;
+            }
         }
 
-        this.readChar();
-
-        return this.input.substring(pos, this.position - 1);
+        return this.input.substring(pos, this.position);
     }
 
     private peekChar(): string {
-        if(this.readPosition >= this.input.length){
+        if (this.readPosition >= this.input.length) {
             return '\0';
         }
 

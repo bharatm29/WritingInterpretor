@@ -1,9 +1,27 @@
-import { ASTNode, BlockStatement, BooleanExpression, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "../ast/ast";
+import {
+    ASTNode,
+    BlockStatement,
+    BooleanExpression,
+    CallExpression,
+    Expression,
+    ExpressionStatement,
+    FunctionLiteral,
+    Identifier,
+    IfExpression,
+    InfixExpression,
+    IntegerLiteral,
+    LetStatement,
+    PrefixExpression,
+    Program,
+    ReturnStatement,
+    Statement,
+    StringLiteral
+} from "../ast/ast";
 import * as Obj from "./interpretObject";
 
 export class GlobalConstants {
     public static BOOL_TRUE: Obj.Boolean = new Obj.Boolean(true);
-    public static BOOL_FALSE: Obj.Boolean = new Obj.Boolean(false);;
+    public static BOOL_FALSE: Obj.Boolean = new Obj.Boolean(false);
     public static NULL: Obj.Null = new Obj.Null();
 }
 
@@ -21,6 +39,9 @@ export function evalAST(node: ASTNode, env: Obj.Environment): Obj.InterpretObjec
 
         case "BooleanExpression":
             return nativeBoolToBooleanObject((node as BooleanExpression).value);
+
+        case "StringLiteral":
+            return new Obj.StringObj((node as StringLiteral).value);
 
         case "PrefixExpression":
             const prefixNode = node as PrefixExpression;

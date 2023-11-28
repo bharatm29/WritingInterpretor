@@ -1,4 +1,19 @@
-import { BooleanExpression, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement, Statement } from "../ast/ast";
+import {
+    BooleanExpression,
+    CallExpression,
+    Expression,
+    ExpressionStatement,
+    FunctionLiteral,
+    Identifier,
+    IfExpression,
+    InfixExpression,
+    IntegerLiteral,
+    LetStatement,
+    PrefixExpression,
+    ReturnStatement,
+    Statement,
+    StringLiteral
+} from "../ast/ast";
 import { Parser } from "../ast/Parser";
 import { Lexer } from "../lexer/lexer";
 
@@ -391,7 +406,7 @@ test("Testing parsing function literal", () => {
     expect(stmt.expression).toBeInstanceOf(FunctionLiteral);
 
     const funcLiteral = stmt.expression as FunctionLiteral;
- 
+
     expect(funcLiteral.parameters?.length).toBe(2);
 
     testLiteralExpressions(funcLiteral.parameters?.at(0) as Identifier, "x");
@@ -476,7 +491,7 @@ test("Testing parsing let statements with expression parsing", () => {
         { input: "let y = true;", expectedIdent: "y", expectedValue: true, },
         { input: "let foobar = y;", expectedIdent: "foobar", expectedValue: "y", }
     ];
- 
+
     tests.forEach(t => {
         const parser = new Parser(new Lexer(t.input));
 
@@ -504,7 +519,7 @@ test("Testing parsing return statements with expression parsing", () => {
         { input: "return true;", expectedValue: true, },
         { input: "return y;", expectedValue: "y", }
     ];
- 
+
     tests.forEach(t => {
         const parser = new Parser(new Lexer(t.input));
 
@@ -520,6 +535,26 @@ test("Testing parsing return statements with expression parsing", () => {
 
         testLiteralExpressions(stmt.returnValue as Expression, t.expectedValue);
     });
+});
+
+test("Testing parsing String Literals", () => {
+    const input: string = '"hello, world"';
+
+    const parser = new Parser(new Lexer(input));
+
+    const program = parser.parseProgram();
+    checkParseErrors(parser);
+
+    expect(program.statements.length).toBe(1);
+    expect(program.statements[0]).toBeInstanceOf(ExpressionStatement);
+
+    const stmt = program.statements[0] as ExpressionStatement;
+
+    expect(stmt.expression).toBeInstanceOf(StringLiteral);
+
+    const literal = stmt.expression as StringLiteral;
+
+    expect(literal.value).toBe("hello, world");
 });
 
 function testLiteralExpressions(exp: Expression, expected: any){

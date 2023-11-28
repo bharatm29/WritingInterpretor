@@ -7,6 +7,7 @@ export enum ObjectType {
     RETURN_OBJ = "RETURN_VAL",
     ERROR_OBJ = "ERROR",
     FUNCTION_OBJ = "FUNCTION",
+    STRING_OBJ = "STRING",
 }
 
 export interface InterpretObject {
@@ -127,4 +128,19 @@ export class FunctionObj implements InterpretObject {
 
         return st;
     }
+}
+
+export class StringObj implements InterpretObject {
+    constructor(
+        public value: string,
+    ) {}
+
+    inspect(): string {
+        return this.value;
+    }
+
+    type(): ObjectType {
+        return ObjectType.STRING_OBJ;
+    }
+
 }

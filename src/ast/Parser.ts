@@ -1,6 +1,24 @@
 import { Lexer } from "../lexer/lexer";
 import { Token, TokenType } from "../lexer/token";
-import { Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Precedence, Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanExpression, IfExpression, BlockStatement, FunctionLiteral, CallExpression } from "./ast";
+import {
+    Program,
+    Statement,
+    LetStatement,
+    Identifier,
+    ReturnStatement,
+    ExpressionStatement,
+    Precedence,
+    Expression,
+    IntegerLiteral,
+    PrefixExpression,
+    InfixExpression,
+    BooleanExpression,
+    IfExpression,
+    BlockStatement,
+    FunctionLiteral,
+    CallExpression,
+    StringLiteral
+} from "./ast";
 
 export class Parser {
     public lex: Lexer;
@@ -35,6 +53,7 @@ export class Parser {
         this.registerPrefix(TokenType.LPAREN, this.parseGroupedExpressions);
         this.registerPrefix(TokenType.IF, this.parseIfExpression);
         this.registerPrefix(TokenType.FUNCTION, this.parseFunctionLiteral);
+        this.registerPrefix(TokenType.STRING, this.parseStringLiteral);
 
         this.infixParseFns = new Map();
         this.registerInfix(TokenType.EQUAL, this.parseInfixExpression);
@@ -123,6 +142,10 @@ export class Parser {
 
     private parseIdentifier(): Expression | null {
         return new Identifier(this.curToken.literal, this.curToken);
+    }
+
+    private parseStringLiteral(): Expression | null {
+        return new StringLiteral(this.curToken, this.curToken.literal);
     }
 
     private parseIntegerLiteral(): Expression | null {
